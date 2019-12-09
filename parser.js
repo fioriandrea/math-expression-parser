@@ -8,17 +8,16 @@ term -> num | functionName(addExpr) | term ^ term | (addExpr) | var
 Lexicon:
 
 num -> [0-9]+(\.[0-9]+)?
-functionName -> [A-Za-z]+
+functionName -> [A-Za-z]\w*
 var -> [A-Za-z]\w*
 */
 
 function parse(str, vars) {
-  vars = {
-    ...vars,
+  const constants = {
     'pi': Math.PI,
     'e': Math.E,
   };
-  const error = "Syntax Error";
+  const error = 'error: Syntax Error';
   let phrase = str.split(/\s+/).join(''); // removes spaces
   if(/[-\+]/.test(phrase[0])) phrase = '0' + phrase; // leading + or -
   const functions = {
@@ -29,6 +28,14 @@ function parse(str, vars) {
     "ceil": x => Math.ceil(x),
     "tan": x => Math.tan(x),
     "atan": x => Math.atan(x),
+    "abs": x => Math.abs(x),
+    "asin": x => Math.asin(x),
+    "acos": x => Math.acos(x),
+    "log": x => Math.log(x),
+    "sinh": x => Math.sinh(x),
+    "cosh": x => Math.cosh(x),
+    "tanh": x => Math.tanh(x),
+    "exp": x => Math.exp(x),
   };
 
   let scan = 0;
@@ -39,17 +46,17 @@ function parse(str, vars) {
 
   function parse_add() {
     let mulExpr = parse_mul();
-    if(mulExpr === error) return error;
+    //if(mulExpr() === error()) return error;
 
     if(eat('+')) {
       let addExpr = parse_add();
-      if(addExpr === error) return error;
-      else mulExpr += addExpr;
+      //if(addExpr() === error()) return error;
+      return () => mulExpr() + addExpr();
     }
     else if(eat('-')) {
       let addExpr = parse_add();
-      if(addExpr === error) return error;
-      else mulExpr -= addExpr;
+      //if(addExpr() === error()) return error;
+      return () => mulExpr() - addExpr();
     }
 
     return mulExpr;
@@ -57,17 +64,17 @@ function parse(str, vars) {
 
   function parse_mul() {
     let term = parse_term();
-    if(term === error) return error;
+    //if(term() === error()) return error;
 
     if(eat('*')) {
       let mulExpr = parse_mul();
-      if(mulExpr === error) return error;
-      else term *= mulExpr;
+      //if(mulExpr() === error()) return error;
+      return () => term()*mulExpr();
     }
     else if(eat('/')) {
       let mulExpr = parse_mul();
-      if(mulExpr === error) return error;
-      else term /= mulExpr;
+      //if(mulExpr() === error()) return error;
+      return () => term()/mulExpr();
     }
 
     return term;
@@ -78,7 +85,7 @@ function parse(str, vars) {
     let value;
 
     if((value = checkNum())) { //number
-      term = parseFloat(value);
+      term = () => parseFloat(value);
     }
     else if((value = checkFunctionName())) { //function
       term = parse_function(value);
@@ -88,40 +95,43 @@ function parse(str, vars) {
     }
     else if(eat('(')) { //(expression)
       term = parse_add();
-      if(term === error) return error;
-      if(!eat(')')) return error;
+      //if(term() === error()) return error;
+      if(!eat(')')) throw error;
     }
-    else return error; //none of the above
+    else throw error; //none of the above
 
-    if(term === error) return error;
+    //if(term() === error()) return error;
 
     if(eat('^')) { //exponentiation
       let exponent = parse_term();
-      if(exponent === error) return error;
-      term = term**exponent;
+      //if(exponent() === error()) return error;
+      return () => term()**exponent();
     }
 
     return term;
   }
 
   function parse_function(functionName) {
-    if(!eat('(')) return error;
+    if(!eat('(')) throw error;
     let args = parse_add();
-    if(args === error) return error;
-    if(!eat(')')) return error;
-    return functions[functionName](args);
+    //if(args() === error()) return error;
+    if(!eat(')')) throw error;
+    return () => functions[functionName](args());
   }
 
   function parse_var(value) {
-    if(!vars[value]) return error;
-    return vars[value];
+    return () => {
+      if(vars[value] !== undefined && constants[value] !== undefined)
+        throw 'error: non existing variable';
+      else return vars[value];
+    };
   }
 
   function checkFunctionName() {
     let index = scan;
     let fname = '';
 
-    while(/^([a-z])$/i.test(phrase[index])) fname += phrase[index++];
+    while(/^(\w)$/i.test(phrase[index])) fname += phrase[index++];
 
     if(functions[fname]) {
       scan = index;
