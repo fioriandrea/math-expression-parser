@@ -41,21 +41,18 @@ function parse(str, vars) {
   let scan = 0;
   const result = parse_add();
 
-  if(scan < phrase.length) return error;
+  if(scan < phrase.length) throw error;
   else return result;
 
   function parse_add() {
     let mulExpr = parse_mul();
-    //if(mulExpr() === error()) return error;
 
     if(eat('+')) {
       let addExpr = parse_add();
-      //if(addExpr() === error()) return error;
       return () => mulExpr() + addExpr();
     }
     else if(eat('-')) {
       let addExpr = parse_add();
-      //if(addExpr() === error()) return error;
       return () => mulExpr() - addExpr();
     }
 
@@ -64,16 +61,13 @@ function parse(str, vars) {
 
   function parse_mul() {
     let term = parse_term();
-    //if(term() === error()) return error;
 
     if(eat('*')) {
       let mulExpr = parse_mul();
-      //if(mulExpr() === error()) return error;
       return () => term()*mulExpr();
     }
     else if(eat('/')) {
       let mulExpr = parse_mul();
-      //if(mulExpr() === error()) return error;
       return () => term()/mulExpr();
     }
 
@@ -95,16 +89,12 @@ function parse(str, vars) {
     }
     else if(eat('(')) { //(expression)
       term = parse_add();
-      //if(term() === error()) return error;
       if(!eat(')')) throw error;
     }
     else throw error; //none of the above
 
-    //if(term() === error()) return error;
-
     if(eat('^')) { //exponentiation
       let exponent = parse_term();
-      //if(exponent() === error()) return error;
       return () => term()**exponent();
     }
 
@@ -114,7 +104,6 @@ function parse(str, vars) {
   function parse_function(functionName) {
     if(!eat('(')) throw error;
     let args = parse_add();
-    //if(args() === error()) return error;
     if(!eat(')')) throw error;
     return () => functions[functionName](args());
   }
