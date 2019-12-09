@@ -1,4 +1,4 @@
-# Project Title
+# Math Expressions Parser
 
 This is a simple recursive descent parser made in JavaScript.
 It can parse simple math expressions like:
