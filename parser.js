@@ -1,7 +1,7 @@
 /*
 BNF grammar:
 
-addExpr -> mulExpr | mulExpr + mulExpr | mulExpr - mulExpr
+addExpr -> mulExpr | mulExpr + addExpr | mulExpr - addExpr
 mulExpr -> term | term * mulExpr | term / mulExpr
 term -> num | functionName(addExpr) | term ^ term | (addExpr) | var
 
@@ -110,8 +110,10 @@ function parse(str, vars) {
 
   function parse_var(value) {
     return () => {
-      if(vars[value] !== undefined && constants[value] !== undefined)
+      if(constants[value] === undefined && vars[value] === undefined) {
         throw 'error: non existing variable';
+      }
+      else if(constants[value] !== undefined) return constants[value];
       else return vars[value];
     };
   }
