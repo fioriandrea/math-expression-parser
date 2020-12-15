@@ -13,7 +13,7 @@ It also supports the use of variables.
 
 ```js
 const vars = {};
-const expr = parse("x^2 + y^2", vars); //return a function;
+const expr = parse("x^2 + y^2", vars); //returns a function;
 
 for(let i = 0; i < 20; i++) {
   vars.x = i;
